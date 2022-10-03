@@ -72,3 +72,23 @@ a {
   padding: 5px;
   width: 100%;
 }
+
+.title {
+  display: block !important;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 60px;
+  text-align: center;
+  color: #003366;
+  clear: left;
+  margin: 0 auto;
+}
+
+/*.nav-top {*/
+/*  display: inline-flex !important;*/
+/*}*/
+
+#dropdown {
+  display: inline-block !important;
+  scale: 50% !important;
+}
+

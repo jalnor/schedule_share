@@ -1,6 +1,10 @@
 {% extends 'calendar/base.html' %}
 
 {% block content %}
+{% if user.is_authenticated %}
+    <p>Hi {{ user.username }}!</p>
+    <a href="{% url 'schedule_calendar:logout' %}">Log Out</a>
+{% endif %}
 <div class="clearfix">
     <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}?{{ prev_month }}"> Previous Month </a>
     <a class="btn btn-info center" href="{% url 'schedule_calendar:event_new' %}?{{ event }}"> Event </a>
