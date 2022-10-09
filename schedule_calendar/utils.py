@@ -1,20 +1,27 @@
 from datetime import datetime, timedelta
 from calendar import HTMLCalendar
+
+from django.contrib.auth.models import User
 from .models import Event
 
 
 class Calendar(HTMLCalendar):
-	def __init__(self, year=None, month=None):
+	def __init__(self, user, year=None, month=None):
 		self.year = year
 		self.month = month
+		self.user = user
 		super(Calendar, self).__init__()
 
 	# formats a day as a td
-	# filter events by day
+	# filter events by day and owner
 	def formatday(self, day, events):
-		events_per_day = events.filter(start_time__day=day)
+		events_per_day = events.filter(start_time__day=day, owner=self.user)
+		other_events = events.filter(start_time__day=day, participants__user_email=self.user.email)
+		print('Other events: ', other_events, ' ', self.user.email)
 		d = ''
 		for event in events_per_day:
+			d += f'<li><a href="event/edit/{event.id}"> {event.title} </a></li>'
+		for event in other_events:
 			d += f'<li><a href="event/edit/{event.id}"> {event.title} </a></li>'
 		if day != 0:
 			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"

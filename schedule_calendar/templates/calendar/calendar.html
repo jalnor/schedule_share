@@ -1,19 +1,33 @@
 {% extends 'calendar/base.html' %}
+{% load static %}
 
 {% block content %}
+    <div class="dropdown" id="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                data-toggle="dropdown" aria-haspopup="false">
+            <img src="{% static '/images/hamburger-btn-48px.svg' %}" alt="Hamburger Menu Icon" />
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenubutton">
+            <a class="dropdown-item" href="{% url 'schedule_calendar:event_new' %}?{{ event }}">Add Event</a>
+            <a class="dropdown-item" href="#">Remove Event</a>
+            <a class="dropdown-item" href="{% url 'schedule_calendar:add_participant' %}">Add Participant</a>
+            <a class="dropdown-item" href="#">Remove Person</a>
+        </div>
+
+    </div>
 {% if user.is_authenticated %}
     <p>Hi {{ user.username }}!</p>
     <a href="{% url 'schedule_calendar:logout' %}">Log Out</a>
 {% endif %}
-<div class="clearfix">
-    <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}?{{ prev_month }}"> Previous Month </a>
-    <a class="btn btn-info center" href="{% url 'schedule_calendar:event_new' %}?{{ event }}"> Event </a>
-    <a class="btn btn-info right" href="{% url 'schedule_calendar:calendar' %}?{{ next_month }}"> Next Month </a>
-</div>
+    <div class="clearfix">
+        <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}?{{ prev_month }}"> Previous Month </a>
+    {#    <a class="btn btn-info center" href="{% url 'schedule_calendar:event_new' %}?{{ event }}"> Event </a>#}
+        <a class="btn btn-info right" href="{% url 'schedule_calendar:calendar' %}?{{ next_month }}"> Next Month </a>
+    </div>
 
-{{ calendar }}
+    {{ calendar }}
 
-<div class="'clearfix">
+    <div class="'clearfix">
 
-</div>
+    </div>
 {% endblock %}

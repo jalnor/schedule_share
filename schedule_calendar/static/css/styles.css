@@ -89,6 +89,6 @@ a {
 
 #dropdown {
   display: inline-block !important;
-  scale: 50% !important;
+  /*scale: 75% !important;*/
 }
 

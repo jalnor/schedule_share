@@ -14,6 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import staticfiles
+from django.contrib.messages import constants as messages
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -123,10 +124,13 @@ STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # django_project/settings.py
 LOGIN_REDIRECT_URL = '/calendar'
-SIGNUP_REDIRECT_URL = '/accounts/login'
 LOGOUT_REDIRECT_URL = '/accounts/login'
+
+#Message tags for toast messages
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}
