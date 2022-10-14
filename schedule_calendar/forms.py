@@ -1,5 +1,18 @@
+from django.contrib.auth.models import User
 from django.forms import ModelForm, DateInput
-from schedule_calendar.models import Event
+from schedule_calendar.models import Event, ScheduleUser, Participant
+
+
+class UserForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ('email', 'password', 'username', 'first_name', 'last_name')
+
+
+class ScheduleUserForm(ModelForm):
+    class Meta:
+        model = ScheduleUser
+        fields = ('address', 'city', 'state', 'zipcode')
 
 
 class EventForm(ModelForm):
@@ -17,3 +30,10 @@ class EventForm(ModelForm):
         # input_formats to parse HTML5 datetime-local input to datetime field
         self.fields['start_time'].input_formats = ('%Y-%m-%dT%H:%M',)
         self.fields['end_time'].input_formats = ('%Y-%m-%dT%H:%M',)
+
+
+class AddParticipantForm(ModelForm):
+    class Meta:
+        model = Participant
+        fields = ('user_email', 'event_id')
+

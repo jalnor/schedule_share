@@ -1,19 +1,22 @@
 {% extends 'calendar/base.html' %}
 
 {% block title %}
-Event
+Add Participant
 {% endblock %}
 
 {% block content %}
 <div class="clearfix">
   <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}"> Calendar </a>
 </div>
-{% include 'calendar/messages.html' %}
+
 <form method="post">
   {% csrf_token %}
   <table class="form form-table">
-    {{ form }}
-    <tr><td colspan="2"><button type="submit" name='submit' class="btn btn-info right"> Submit </button></td></tr>
+      {{ form }}
+      {% for participant in participants %}
+          <li>{{ participant | safe }}</li>
+      {%  endfor %}
+      <tr><td colspan="2"><button type="submit" name="add" class="btn btn-info right"> Add Participant </button></td></tr>
   </table>
 </form>
 {% endblock %}
