@@ -17,10 +17,13 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views import generic
 from django.utils.safestring import mark_safe
+from dotenv import load_dotenv
 
 from .forms import EventForm, UserForm, ScheduleUserForm, AddParticipantForm
 from .models import *
 from .utils import Calendar
+
+load_dotenv()
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -39,15 +42,11 @@ class CalendarView(generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(self.request.user)
         # use today's date for the calendar
-        # d = get_date(self.request.GET.get('day', None))
         d = get_date(self.request.GET.get('month', None))
-        # print('Current user: ', self.context('user'))
         # Instantiate our calendar class with today's year and date
         cal = Calendar(self.request.user, d.year, d.month)
 
-        # d = get_date(self.request.GET.get('month', None))
         context['prev_month'] = prev_month(d)
         context['next_month'] = next_month(d)
 
@@ -60,16 +59,16 @@ class CalendarView(generic.ListView):
 
 def prev_month(d):
     first = d.replace(day=1)
-    prev_month = first - timedelta(days=1)
-    month = 'month=' + str(prev_month.year) + '-' + str(prev_month.month)
+    previous_month = first - timedelta(days=1)
+    month = 'month=' + str(previous_month.year) + '-' + str(previous_month.month)
     return month
 
 
 def next_month(d):
     days_in_month = calendar.monthrange(d.year, d.month)[1]
     last = d.replace(day=days_in_month)
-    next_month = last + timedelta(days=1)
-    month = 'month=' + str(next_month.year) + '-' + str(next_month.month)
+    the_next_month = last + timedelta(days=1)
+    month = 'month=' + str(the_next_month.year) + '-' + str(the_next_month.month)
     return month
 
 
@@ -82,14 +81,14 @@ def get_date(req_day):
 
 def event(request, event_id=None):
     participants = Participant.objects.get_queryset()
-    print('Participants: ', participants)
+
     if event_id:
         instance = get_object_or_404(Event, pk=event_id)
     else:
         instance = Event()
 
     form = EventForm(request.POST or None, instance=instance)
-    # form.participants.objects.filter()
+
     if request.POST and form.is_valid():
         if event_id:
             if request.user.id == instance.owner.id:
@@ -106,28 +105,23 @@ def event(request, event_id=None):
             event_form = form.save(commit=False)
             event_form.owner = request.user
             event_form.save()
-            return HttpResponseRedirect(reverse('schedule_calendar:calendar'))
+            return redirect('schedule_calendar:calendar')
 
     return render(request, 'calendar/event.html', {'form': form})
 
 
 def add_participant(request, user_email=None):
-    print('Supposed to go to add participant here...', request.user.email, ' With user_email: ', user_email)
+
     if user_email:
         instance = get_object_or_404(Participant, pk=request.user.email)
     else:
         instance = Participant()
-        print('Instance: ', instance)
     form = AddParticipantForm(request.POST or None, instance=instance)
     if request.POST and form.is_valid():
-        user = ScheduleUser.objects.get(user_id=request.user.id)
+        account_sid = os.environ['ACCOUNT']
+        token = os.environ['TOKEN']
 
-        # send_mail(
-        #     'Test Invite',
-        #     'You are invited',
-        #     'from:',
-        #     'to'
-        # )
+        user = ScheduleUser.objects.get(user_id=request.user.id)
 
         print('ScheduleUser: ', user)
         add_form = form.save(commit=False)
@@ -135,26 +129,21 @@ def add_participant(request, user_email=None):
         add_form.save()
 
         return redirect('schedule_calendar:calendar')
-    print('Should return view here...')
+
     return render(request, 'calendar/add_participant.html', {'form': form})
 
 
 @transaction.atomic
 def signup(request):
-    # User = get_user_model()
     if request.method == 'POST':
-
-        print('Getting form data...')
-        user_form = UserForm(request.POST)
-        schedule_user_form = ScheduleUserForm(request.POST)
-        print('ScheduleUserForm data...', schedule_user_form.data)
-        print('UserForm isvalid: ', user_form.is_valid(), ' ScheduleUserForm isvalid: ', schedule_user_form.is_valid())
+        user_form = UserForm(request.POST)  # , instance=request.user
+        schedule_user_form = ScheduleUserForm(request.POST)  # , instance=request.user.scheduleuser
         if user_form.is_valid() and schedule_user_form.is_valid():
-            print('Inside save area...')
+
             user = user_form.save(commit=False)
             user.is_active = False
             user.save()
-            print(user.id)
+
             schedule_user = schedule_user_form.save(commit=False)
             schedule_user.user_id = user.id
             schedule_user.save()
@@ -179,7 +168,6 @@ def signup(request):
         else:
             messages.error(request, 'Please correct the error below: ')
     else:
-        print('Getting forms...')
         user_form = UserForm()
         schedule_user_form = ScheduleUserForm()
         return render(request, "registration/signup.html", {

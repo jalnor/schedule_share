@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-import django.core.mail.backends.smtp
 from django.contrib import staticfiles
 from django.contrib.messages import constants as messages
 from dotenv import load_dotenv
@@ -21,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -144,7 +143,3 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ['email_user']
 EMAIL_HOST_PASSWORD = os.environ['email_password']
 
-# #Message tags for toast messages
-# MESSAGE_TAGS = {
-#     messages.ERROR: 'danger'
-# }

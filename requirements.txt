@@ -2,6 +2,7 @@ pip~=22.2.2
 wheel~=0.37.1
 django-twilio~=0.14.0
 Django~=4.0.8
+python-dotenv~=0.21.0
 asgiref~=3.5.2
 sqlparse~=0.4.3
 setuptools~=65.3.0
