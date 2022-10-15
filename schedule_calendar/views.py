@@ -43,15 +43,15 @@ class CalendarView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # use today's date for the calendar
-        d = get_date(self.request.GET.get('month', None))
+        today_date = get_date(self.request.GET.get('month', None))
         # Instantiate our calendar class with today's year and date
-        cal = Calendar(self.request.user, d.year, d.month)
+        current_calendar = Calendar(self.request.user, today_date.year, today_date.month)
 
-        context['prev_month'] = prev_month(d)
-        context['next_month'] = next_month(d)
+        context['prev_month'] = prev_month(today_date)
+        context['next_month'] = next_month(today_date)
 
         # Call the formatmonth method, which returns our calendar as a table
-        html_cal = cal.formatmonth(withyear=True)
+        html_cal = current_calendar.formatmonth(with_year=True)
         context['calendar'] = mark_safe(html_cal)
 
         return context
@@ -118,10 +118,10 @@ def add_participant(request, user_email=None):
         instance = Participant()
     form = AddParticipantForm(request.POST or None, instance=instance)
     if request.POST and form.is_valid():
-        account_sid = os.environ['ACCOUNT']
-        token = os.environ['TOKEN']
+        # account_sid = os.environ['ACCOUNT']
+        # token = os.environ['TOKEN']
 
-        user = ScheduleUser.objects.get(user_id=request.user.id)
+        user = ScheduleUser.objects.get(id=request.user.id)
 
         print('ScheduleUser: ', user)
         add_form = form.save(commit=False)
@@ -190,16 +190,13 @@ def get_user(email):
 
 def login(request):
     if request.POST:
-        print('Has data: ', request.POST)
         email = request.POST['email']
         password = request.POST['password']
         username = get_user(email)
         user = authenticate(username=username, password=password)
-        print('User: ', user)
         if user is not None:
             return redirect('schedule_calendar:calendar')
     else:
-        print('Sending form!')
         user_form = UserForm()
         return render(request, 'registration/login.html', {
             'user_form': user_form
@@ -207,7 +204,6 @@ def login(request):
 
 
 def activate(request, uidb64, token):
-    print('It works!!!')
     User = get_user_model()
     try:
         uid = urlsafe_base64_decode(uidb64)
