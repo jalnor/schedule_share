@@ -13,8 +13,13 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import django.core.mail.backends.smtp
 from django.contrib import staticfiles
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -130,7 +135,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/calendar'
 LOGOUT_REDIRECT_URL = '/accounts/login'
 
-#Message tags for toast messages
-MESSAGE_TAGS = {
-    messages.ERROR: 'danger'
-}
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 8000
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.environ['email_user']
+EMAIL_HOST_PASSWORD = os.environ['email_password']
+
+# #Message tags for toast messages
+# MESSAGE_TAGS = {
+#     messages.ERROR: 'danger'
+# }

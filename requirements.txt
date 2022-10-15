@@ -6,3 +6,5 @@ asgiref~=3.5.2
 sqlparse~=0.4.3
 setuptools~=65.3.0
 twilio~=7.14.2
+python-dotenv~=0.21.0
+pytest~=7.1.3

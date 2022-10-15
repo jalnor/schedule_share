@@ -1,12 +1,13 @@
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import ModelForm, DateInput
 from schedule_calendar.models import Event, ScheduleUser, Participant
 
 
-class UserForm(ModelForm):
+class UserForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ('email', 'password', 'username', 'first_name', 'last_name')
+        fields = ('username', 'email', 'first_name', 'last_name')
 
 
 class ScheduleUserForm(ModelForm):
