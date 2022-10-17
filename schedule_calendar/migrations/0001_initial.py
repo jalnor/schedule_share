@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('user_email', models.EmailField(blank=True, max_length=254)),
                 ('event_id', models.IntegerField(blank=True, null=True)),
-                ('inviter_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='schedule_calendar.scheduleuser')),
+                ('owner_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='schedule_calendar.scheduleuser')),
             ],
         ),
         migrations.CreateModel(

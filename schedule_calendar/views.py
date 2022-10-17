@@ -19,7 +19,7 @@ from django.views import generic
 from django.utils.safestring import mark_safe
 from dotenv import load_dotenv
 
-from .forms import EventForm, UserForm, ScheduleUserForm, AddParticipantForm
+from .forms import EventForm, UserForm, ProfileForm, AddParticipantForm
 from .models import *
 from .utils import Calendar
 
@@ -90,10 +90,11 @@ def event(request, event_id=None):
     form = EventForm(request.POST or None, instance=instance)
 
     if request.POST and form.is_valid():
+        event_form = form.save(commit=False)
+
         if event_id:
             if request.user.id == instance.owner.id:
-                event_form = form.save(commit=False)
-                event_form.owner = request.user
+                event_form.owner = request.user  # I think this needs to change
                 event_form.save()
                 for participant in participants:
                     participant.event_id = event_id
@@ -102,7 +103,6 @@ def event(request, event_id=None):
             else:
                 messages.error(request, 'You cannot edit this event!', 'danger')
         else:
-            event_form = form.save(commit=False)
             event_form.owner = request.user
             event_form.save()
             return redirect('schedule_calendar:calendar')
@@ -110,7 +110,7 @@ def event(request, event_id=None):
     return render(request, 'calendar/event.html', {'form': form})
 
 
-def add_participant(request, user_email=None):
+def invite(request, user_email=None):
 
     if user_email:
         instance = get_object_or_404(Participant, pk=request.user.email)
@@ -118,14 +118,15 @@ def add_participant(request, user_email=None):
         instance = Participant()
     form = AddParticipantForm(request.POST or None, instance=instance)
     if request.POST and form.is_valid():
+        # For future use
         # account_sid = os.environ['ACCOUNT']
         # token = os.environ['TOKEN']
 
-        user = ScheduleUser.objects.get(id=request.user.id)
+        user = Profile.objects.get(id=request.user.id)
 
-        print('ScheduleUser: ', user)
+        print('Profile: ', user)
         add_form = form.save(commit=False)
-        add_form.inviter_id = user
+        add_form.owner_id = user
         add_form.save()
 
         return redirect('schedule_calendar:calendar')
@@ -137,16 +138,16 @@ def add_participant(request, user_email=None):
 def signup(request):
     if request.method == 'POST':
         user_form = UserForm(request.POST)  # , instance=request.user
-        schedule_user_form = ScheduleUserForm(request.POST)  # , instance=request.user.scheduleuser
-        if user_form.is_valid() and schedule_user_form.is_valid():
+        profile_form = ProfileForm(request.POST)  # , instance=request.user.scheduleuser
+        if user_form.is_valid() and profile_form.is_valid():
 
             user = user_form.save(commit=False)
             user.is_active = False
             user.save()
-
-            schedule_user = schedule_user_form.save(commit=False)
-            schedule_user.user_id = user.id
-            schedule_user.save()
+            print(urlsafe_base64_encode(force_bytes(user.pk)))
+            profile_form = profile_form.save(commit=False)
+            profile_form.user_id = user.id
+            profile_form.save()
 
             current_site = get_current_site(request)
             subject = 'Email Verification'
@@ -169,10 +170,10 @@ def signup(request):
             messages.error(request, 'Please correct the error below: ')
     else:
         user_form = UserForm()
-        schedule_user_form = ScheduleUserForm()
+        profile_form = ProfileForm()
         return render(request, "registration/signup.html", {
             'user_form': user_form,
-            'schedule_user_form': schedule_user_form
+            'schedule_user_form': profile_form
         })
 
 

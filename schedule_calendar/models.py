@@ -4,7 +4,7 @@ from django.urls import reverse
 # from phonenumber_field.modelfields import PhoneNumberField
 
 
-class ScheduleUser(models.Model):
+class Profile(models.Model):
     address = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=75, blank=True)
     state = models.CharField(max_length=25, blank=True)
@@ -15,10 +15,13 @@ class ScheduleUser(models.Model):
 class Participant(models.Model):
     user_email = models.EmailField(blank=True)
     event_id = models.IntegerField(null=True, blank=True)
-    inviter_id = models.ForeignKey(ScheduleUser, on_delete=models.CASCADE, blank=True, null=True)
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.user_email
+
+
+# class Invitation(models.Model):
 
 
 # TODO Rename class to match application and add variables for ex. address...

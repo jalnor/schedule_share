@@ -17,7 +17,7 @@ class Calendar(HTMLCalendar):
 	def formatday(self, day, events):
 		events_per_day = events.filter(start_time__day=day, owner=self.user)
 		other_events = events.filter(start_time__day=day, participants__user_email=self.user.email)
-		print('Other events: ', other_events, ' ', self.user.email)
+		# print('Other events: ', other_events, ' ', self.user.email)
 		date = ''
 		for event in events_per_day:
 			date += f'<li><a href="event/edit/{event.id}"> {event.title} </a></li>'
