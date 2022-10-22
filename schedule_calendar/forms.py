@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.forms import ModelForm, DateInput
-from schedule_calendar.models import Event, Profile, Participant
+from schedule_calendar.models import Event, Profile, Participant, Address
 
 
 class UserForm(UserCreationForm):
@@ -10,10 +10,16 @@ class UserForm(UserCreationForm):
         fields = ('username', 'email', 'first_name', 'last_name')
 
 
+class AddressForm(ModelForm):
+    class Meta:
+        model = Address
+        fields = ('street_address', 'city', 'state', 'zipcode')
+
+
 class ProfileForm(ModelForm):
     class Meta:
         model = Profile
-        fields = ('address', 'city', 'state', 'zipcode')
+        fields = ('avatar_url',)
 
 
 class EventForm(ModelForm):
@@ -24,7 +30,7 @@ class EventForm(ModelForm):
             'start_time': DateInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
             'end_time': DateInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         }
-        fields = '__all__'
+        fields = ('event_name', 'description', 'start_time', 'end_time', 'owner')
 
     def __init__(self, *args, **kwargs):
         super(EventForm, self).__init__(*args, **kwargs)
@@ -33,8 +39,8 @@ class EventForm(ModelForm):
         self.fields['end_time'].input_formats = ('%Y-%m-%dT%H:%M',)
 
 
-class AddParticipantForm(ModelForm):
+class InviteParticipantForm(ModelForm):
     class Meta:
         model = Participant
-        fields = ('user_email', 'event_id')
+        fields = ('participant', 'event')
 

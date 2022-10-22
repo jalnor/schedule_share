@@ -4,10 +4,9 @@
 <form method="post">
     {% csrf_token %}
      <table class="form form-table">
-
+         {{ address_form.as_p }}
          {{ user_form.as_p }}
-         {{ schedule_user_form.as_p }}
-
+         {{ profile_form.as_p }}
          <button type="submit">Sign Up</button>
          <a href='{% url 'schedule_calendar:login' %}'>Log In</a>
      </table>

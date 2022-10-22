@@ -19,7 +19,7 @@ from django.views import generic
 from django.utils.safestring import mark_safe
 from dotenv import load_dotenv
 
-from .forms import EventForm, UserForm, ProfileForm, AddParticipantForm
+from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm
 from .models import *
 from .utils import Calendar
 
@@ -84,70 +84,105 @@ def event(request, event_id=None):
 
     if event_id:
         instance = get_object_or_404(Event, pk=event_id)
+        if instance.event_address:
+            address_instance = Address.objects.get(id=instance.event_address.id)
+        else:
+            address_instance = Address()
     else:
         instance = Event()
+        instance.owner = request.user
+        address_instance = Address()
 
     form = EventForm(request.POST or None, instance=instance)
+    address_form = AddressForm(request.POST or None, instance=address_instance)
 
     if request.POST and form.is_valid():
-        event_form = form.save(commit=False)
+        event = form.save(commit=False)
+        address = address_form.save(commit=False)
 
         if event_id:
             if request.user.id == instance.owner.id:
-                event_form.owner = request.user  # I think this needs to change
-                event_form.save()
-                for participant in participants:
-                    participant.event_id = event_id
-                    participant.save()
+                address.save()
+                print('Address id in else: ', address.id)
+                if address.id:
+                    event.event_address_id = address.id
+
+                event.owner = request.user
+                event.save()
                 return HttpResponseRedirect(reverse('schedule_calendar:calendar'))
             else:
                 messages.error(request, 'You cannot edit this event!', 'danger')
         else:
-            event_form.owner = request.user
-            event_form.save()
+            address.save()
+            print('Address id in else: ', address.id)
+            event.event_address_id = address.id
+            event.owner = request.user
+            event.save()
+
             return redirect('schedule_calendar:calendar')
 
-    return render(request, 'calendar/event.html', {'form': form})
+    return render(request, 'calendar/event.html', {
+        'form': form,
+        'address_form': address_form,
+    })
 
 
 def invite(request, user_email=None):
-
     if user_email:
-        instance = get_object_or_404(Participant, pk=request.user.email)
+        instance = get_object_or_404(Participant, pk=request.user.id)
     else:
         instance = Participant()
-    form = AddParticipantForm(request.POST or None, instance=instance)
+    form = InviteParticipantForm(request.POST or None, instance=instance)
     if request.POST and form.is_valid():
         # For future use
         # account_sid = os.environ['ACCOUNT']
         # token = os.environ['TOKEN']
-
-        user = Profile.objects.get(id=request.user.id)
+        print('Profile: ', user_email)
+        print('Profile: ', instance)
+        user = User.objects.get(email=instance)
 
         print('Profile: ', user)
-        add_form = form.save(commit=False)
-        add_form.owner_id = user
-        add_form.save()
+        current_site = get_current_site(request)
+        subject = 'Event Invitation'
+        message = render_to_string('calendar/email.html', {
+            'user': user,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': account_activation_token.make_token(user),
+        })
+        from_mail = os.environ['email_address']
+        to_email = form.cleaned_data.get('email')
+        # try:
+        #     send_mail(subject, message, [from_mail], [to_email], fail_silently=False)
+        # except socket.error:
+        #     redirect('schedule_calendar:signup')
+        # add_form = form.save(commit=False)
+        # add_form.owner_id = user
+        # add_form.save()
 
         return redirect('schedule_calendar:calendar')
 
-    return render(request, 'calendar/add_participant.html', {'form': form})
+    return render(request, 'calendar/invite_participant.html', {'form': form})
 
 
 @transaction.atomic
 def signup(request):
     if request.method == 'POST':
-        user_form = UserForm(request.POST)  # , instance=request.user
-        profile_form = ProfileForm(request.POST)  # , instance=request.user.scheduleuser
-        if user_form.is_valid() and profile_form.is_valid():
+        address_form = AddressForm(request.POST)
+        user_form = UserForm(request.POST)
+        profile_form = ProfileForm(request.POST)
+        if user_form.is_valid():
+            address = address_form.save()
 
             user = user_form.save(commit=False)
             user.is_active = False
             user.save()
-            print(urlsafe_base64_encode(force_bytes(user.pk)))
-            profile_form = profile_form.save(commit=False)
-            profile_form.user_id = user.id
-            profile_form.save()
+            print('Url safe id: ', urlsafe_base64_encode(force_bytes(user.pk)))
+
+            new_profile = profile_form.save(commit=False)
+            new_profile.user_id = user.id
+            new_profile.address_id = address.id
+            new_profile.save()
 
             current_site = get_current_site(request)
             subject = 'Email Verification'
@@ -162,19 +197,59 @@ def signup(request):
             try:
                 send_mail(subject, message, [from_mail], [to_email], fail_silently=False)
             except socket.error:
-                redirect('schedule_calendar:login')
+                redirect('schedule_calendar:signup')
                 # messages.success(request, 'Your update is successful!')
             return HttpResponse('Please verify your email...')
-
         else:
             messages.error(request, 'Please correct the error below: ')
     else:
+        address_form = AddressForm()
         user_form = UserForm()
         profile_form = ProfileForm()
         return render(request, "registration/signup.html", {
+            'address_form': address_form,
             'user_form': user_form,
-            'schedule_user_form': profile_form
+            'profile_form': profile_form,
         })
+
+
+def profile(request):
+
+    profile_instance = Profile.objects.get(user_id=request.user.id)
+    print('Profile instance: ', profile_instance)
+    # address_id = profile_instance.address_id
+
+    if profile_instance:
+        address_instance = get_object_or_404(Address, pk=profile_instance.address_id)
+    else:
+        address_instance = Address()
+    print('Address instance: ', address_instance)
+    address_form = AddressForm(request.POST or None, instance=address_instance)
+    profile_form = ProfileForm(request.POST or None, instance=profile_instance)
+
+    if request.method == 'POST' and \
+            address_form.is_valid() and \
+            profile_form.is_valid():
+
+        address = address_form.save()
+        print('Address id: ', address.id)
+        new_profile = profile_form.save(commit=False)
+        new_profile.address_id = address.id
+        new_profile.save()
+        return redirect('schedule_calendar:calendar')
+    else:
+        return render(request, 'calendar/user_profile.html', {
+            'address_form': address_form,
+            'profile_form': profile_form,
+        })
+
+
+def event_delete(request, event_id=None):
+    print('Removing event...')
+
+
+def remove_participant(request):
+    print('Removing participant...')
 
 
 def verifying(request):
@@ -189,23 +264,8 @@ def get_user(email):
     pass
 
 
-def login(request):
-    if request.POST:
-        email = request.POST['email']
-        password = request.POST['password']
-        username = get_user(email)
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            return redirect('schedule_calendar:calendar')
-    else:
-        user_form = UserForm()
-        return render(request, 'registration/login.html', {
-            'user_form': user_form
-        })
-
-
 def activate(request, uidb64, token):
-    User = get_user_model()
+    # user = get_user_model()
     try:
         uid = urlsafe_base64_decode(uidb64)
         user = User.objects.get(pk=uid)

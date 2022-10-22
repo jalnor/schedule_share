@@ -13,5 +13,8 @@ urlpatterns = [
     path('calendar/', views.CalendarView.as_view(), name='calendar'),
     path('event/new/', views.event, name='event_new'),
     path('calendar/event/edit/<event_id>/', views.event, name='event_edit'),
-    path('invite/', views.invite, name='invite')
+    path('invite/', views.invite, name='invite'),
+    path('profile/edit/', views.profile, name='profile'),
+    path('event_delete/', views.event_delete, name='event_delete'),
+    path('remove_participant/', views.remove_participant, name='remove_participant'),
 ]

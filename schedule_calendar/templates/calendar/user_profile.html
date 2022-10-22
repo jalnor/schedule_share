@@ -1,0 +1,20 @@
+{% extends "calendar/base.html" %}
+
+{% block title %}
+Update Profile
+{% endblock %}
+
+{% block content %}
+    <div class="clearfix">
+      <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}"> Calendar </a>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+         <table class="form form-table">
+             {{ address_form }}
+             {{ profile_form }}
+             <tr><td colspan="2"><button type="submit">Update Profile</button></td></tr>
+             <tr><td colspan="2"><a href='{% url 'schedule_calendar:login' %}'>Log In</a></td></tr>
+         </table>
+    </form>
+{% endblock %}
