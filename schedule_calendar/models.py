@@ -17,21 +17,6 @@ class Profile(models.Model):
     avatar_url = models.URLField(blank=True)
 
 
-class Participant(models.Model):
-
-    class Status(models.TextChoices):
-        INVITED = 'Invited'
-        ACCEPTED = 'Accepted'
-        DECLINED = 'Declined'
-
-    participant = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
-    event = models.ForeignKey('Event', on_delete=models.CASCADE, blank=True)
-    status = models.CharField(max_length=8, choices=Status.choices, default=None)
-
-    def __str__(self):
-        return self.participant
-
-
 class Event(models.Model):
     event_name = models.CharField(max_length=200)
     description = models.TextField()
@@ -49,6 +34,21 @@ class Event(models.Model):
     def get_html_url(self):
         url = reverse('calendar:event_edit', args=(self.id,))
         return f'<a href="{url}"> {self.event_name} </a>'
+
+
+class Participant(models.Model):
+
+    class Status(models.TextChoices):
+        INVITED = 'Invited'
+        ACCEPTED = 'Accepted'
+        DECLINED = 'Declined'
+
+    participant = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True)
+    status = models.CharField(max_length=8, choices=Status.choices, default=None)
+
+    def __str__(self):
+        return self.participant.email
 
 
 

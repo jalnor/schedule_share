@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.core import mail
 from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
@@ -19,21 +18,12 @@ from django.views import generic
 from django.utils.safestring import mark_safe
 from dotenv import load_dotenv
 
+from .email_handling import EmailHandler
 from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm
 from .models import *
 from .utils import Calendar
 
 load_dotenv()
-
-
-class TokenGenerator(PasswordResetTokenGenerator):
-    def _make_hash_value(self, user, timestamp):
-        return (
-            f'{user.pk}{timestamp}{user.is_active}'
-        )
-
-
-account_activation_token = TokenGenerator()
 
 
 class CalendarView(generic.ListView):
@@ -109,7 +99,7 @@ def event(request, event_id=None):
 
                 event.owner = request.user
                 event.save()
-                return HttpResponseRedirect(reverse('schedule_calendar:calendar'))
+                return redirect('schedule_calendar:calendar')
             else:
                 messages.error(request, 'You cannot edit this event!', 'danger')
         else:
@@ -127,51 +117,62 @@ def event(request, event_id=None):
     })
 
 
-def invite(request, user_email=None):
-    if user_email:
-        instance = get_object_or_404(Participant, pk=request.user.id)
-    else:
-        instance = Participant()
-    form = InviteParticipantForm(request.POST or None, instance=instance)
+def invite(request):
+
+    participant_instance = Participant()
+
+    form = InviteParticipantForm(request.POST or None, instance=participant_instance)
     if request.POST and form.is_valid():
-        # For future use
+        """ For future use """
         # account_sid = os.environ['ACCOUNT']
         # token = os.environ['TOKEN']
-        print('Profile: ', user_email)
-        print('Profile: ', instance)
-        user = User.objects.get(email=instance)
 
-        print('Profile: ', user)
-        current_site = get_current_site(request)
-        subject = 'Event Invitation'
-        message = render_to_string('calendar/email.html', {
-            'user': user,
-            'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': account_activation_token.make_token(user),
-        })
-        from_mail = os.environ['email_address']
-        to_email = form.cleaned_data.get('email')
-        # try:
-        #     send_mail(subject, message, [from_mail], [to_email], fail_silently=False)
-        # except socket.error:
-        #     redirect('schedule_calendar:signup')
-        # add_form = form.save(commit=False)
-        # add_form.owner_id = user
-        # add_form.save()
+        current_event = Event.objects.get(id=request.POST['event'])
+        participant = form.save(commit=False)
+        participant.status = participant.Status.INVITED
+        participant.save()
+
+        user = User.objects.get(email=participant_instance)
+
+        invite_email = EmailHandler(
+            current_user=request.user,
+            template='calendar/invitation.html',
+            from_email=request.user.email,
+            recipient=user,
+            to_email=user.email,
+            subject='Event Invitation',
+            current_site=get_current_site(request),
+            current_event=current_event,
+            participant=participant
+        )
+        sent = invite_email.send()
+
+        print('Sent: ', sent)
+        if sent == 1001:
+            messages.error('An error has occurred, please try again!')
 
         return redirect('schedule_calendar:calendar')
 
     return render(request, 'calendar/invite_participant.html', {'form': form})
 
 
+def invite_response(request):
+    return render(request, 'calendar/invite_response.html')
+
+
 @transaction.atomic
-def signup(request):
+def signup(request, error=None):
+    if error:
+        messages.error(request, error)
+    address_form = AddressForm(request.POST or None,)
+    user_form = UserForm(request.POST)
+    profile_form = ProfileForm(request.POST)
+
     if request.method == 'POST':
-        address_form = AddressForm(request.POST)
-        user_form = UserForm(request.POST)
-        profile_form = ProfileForm(request.POST)
         if user_form.is_valid():
+
+            user = user_form.save(commit=False)
+
             address = address_form.save()
 
             user = user_form.save(commit=False)
@@ -184,28 +185,27 @@ def signup(request):
             new_profile.address_id = address.id
             new_profile.save()
 
-            current_site = get_current_site(request)
-            subject = 'Email Verification'
-            message = render_to_string('calendar/email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-            })
-            from_mail = os.environ['email_address']
-            to_email = user_form.cleaned_data.get('email')
-            try:
-                send_mail(subject, message, [from_mail], [to_email], fail_silently=False)
-            except socket.error:
+            invite_email = EmailHandler(
+                current_user=user,
+                template='calendar/email.html',
+                from_email=os.environ['email_address'],
+                recipient=user,
+                to_email=user.email,
+                subject='Email Verification',
+                current_site=get_current_site(request)
+            )
+            sent = invite_email.send()
+
+            print('Sent: ', sent)
+            if sent == 1001:
+                messages.error('An error has occurred, please try again!')
                 redirect('schedule_calendar:signup')
                 # messages.success(request, 'Your update is successful!')
+            # TODO create a template for this
             return HttpResponse('Please verify your email...')
         else:
-            messages.error(request, 'Please correct the error below: ')
+            return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
     else:
-        address_form = AddressForm()
-        user_form = UserForm()
-        profile_form = ProfileForm()
         return render(request, "registration/signup.html", {
             'address_form': address_form,
             'user_form': user_form,
@@ -216,14 +216,12 @@ def signup(request):
 def profile(request):
 
     profile_instance = Profile.objects.get(user_id=request.user.id)
-    print('Profile instance: ', profile_instance)
-    # address_id = profile_instance.address_id
 
     if profile_instance:
         address_instance = get_object_or_404(Address, pk=profile_instance.address_id)
     else:
         address_instance = Address()
-    print('Address instance: ', address_instance)
+
     address_form = AddressForm(request.POST or None, instance=address_instance)
     profile_form = ProfileForm(request.POST or None, instance=profile_instance)
 
@@ -261,23 +259,6 @@ def get_user(email):
         return User.objects.get(email=email.lower())
     except User.DoesNotExist:
         return None
-    pass
-
-
-def activate(request, uidb64, token):
-    # user = get_user_model()
-    try:
-        uid = urlsafe_base64_decode(uidb64)
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-        return redirect('schedule_calendar:login')
-    else:
-        return HttpResponse('Invalid activation link. Please try again>')
 
 
 def index(request):

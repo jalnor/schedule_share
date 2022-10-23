@@ -28,6 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-t+whqd)@zmg6h3qyxou1xs#^$aon$#n+06f1&bgv-+$n=9f8)v'
+DEFAULT_HASHING_ALGORITHM = 'sha256'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -135,8 +136,13 @@ LOGIN_REDIRECT_URL = '/calendar'
 LOGOUT_REDIRECT_URL = '/accounts/login'
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST = 'localhost'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = ''
+
 EMAIL_PORT = 8000
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False

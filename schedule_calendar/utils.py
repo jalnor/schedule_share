@@ -16,7 +16,7 @@ class Calendar(HTMLCalendar):
 	# formats a day as a td
 	# filter events by day and owner
 	def formatday(self, day, events):
-		print('User in calendar: ', self.user)
+		# print('User in calendar: ', self.user)
 
 		events_per_day = events.filter(start_time__day=day, owner=self.user)
 		# other_events = events.filter(start_time__day=day, participants__participant_email=self.user.email)
