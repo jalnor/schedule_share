@@ -12,10 +12,15 @@ urlpatterns = [
     path('signup/<error>', views.signup, name='signup_retry'),
     path('profile/edit/', views.profile, name='profile'),
     path('logout/', views.index),
+
+    path('address_book/', views.address_book, name='address_book'),
+
     path('calendar/', views.CalendarView.as_view(), name='calendar'),
+
     path('event/new/', views.event, name='event_new'),
     path('calendar/event/edit/<event_id>/', views.event, name='event_edit'),
     path('event_delete/', views.event_delete, name='event_delete'),
+
     path('invite/', views.invite, name='invite'),
     path('invite_result/<uidb64>/<token>/<participant>/<result>', email_handling.invite_result, name='invite_result'),
     path('invite_response/', views.invite_response, name='invite_response'),

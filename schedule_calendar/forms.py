@@ -1,7 +1,8 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.forms import ModelForm, DateInput
-from schedule_calendar.models import Event, Profile, Participant, Address
+from django.core.validators import EmailValidator
+from django.forms import ModelForm, DateInput, forms, EmailField
+from schedule_calendar.models import Event, Profile, Participant, Address, AddressBook
 
 
 class UserForm(UserCreationForm):
@@ -43,4 +44,8 @@ class InviteParticipantForm(ModelForm):
     class Meta:
         model = Participant
         fields = ('participant', 'event')
+
+
+class AddToAddressBook(forms.Form):
+    email = EmailField(required=True)
 

@@ -19,7 +19,7 @@ from django.utils.safestring import mark_safe
 from dotenv import load_dotenv
 
 from .email_handling import EmailHandler
-from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm
+from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, AddToAddressBook
 from .models import *
 from .utils import Calendar
 
@@ -171,11 +171,11 @@ def signup(request, error=None):
     if request.method == 'POST':
         if user_form.is_valid():
 
-            user = user_form.save(commit=False)
-
             address = address_form.save()
 
             user = user_form.save(commit=False)
+            if user == get_user(user.email):
+                return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
             user.is_active = False
             user.save()
             print('Url safe id: ', urlsafe_base64_encode(force_bytes(user.pk)))
@@ -196,13 +196,11 @@ def signup(request, error=None):
             )
             sent = invite_email.send()
 
-            print('Sent: ', sent)
             if sent == 1001:
                 messages.error('An error has occurred, please try again!')
                 redirect('schedule_calendar:signup')
-                # messages.success(request, 'Your update is successful!')
-            # TODO create a template for this
-            return HttpResponse('Please verify your email...')
+
+            return redirect('schedule_calendar:verifying')
         else:
             return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
     else:
@@ -259,6 +257,26 @@ def get_user(email):
         return User.objects.get(email=email.lower())
     except User.DoesNotExist:
         return None
+
+
+def address_book(request):
+    form = AddToAddressBook()
+    if request.method == 'POST':
+
+        profile = Profile.objects.get(pk=request.user.id)
+        user = get_user(request.POST['email'])
+        if request.user.id == user.id:
+            return redirect('schedule_calendar:calendar')
+
+        addressbook = AddressBook()
+        addressbook.profile = profile
+        addressbook.contacts = user
+        addressbook.save()
+
+        return redirect('schedule_calendar:address_book')
+    return render(request, 'calendar/address_book.html', {
+        'form': form
+    })
 
 
 def index(request):

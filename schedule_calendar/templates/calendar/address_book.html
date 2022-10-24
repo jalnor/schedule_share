@@ -1,0 +1,57 @@
+{% extends 'calendar/base.html' %}
+
+{%  block title %}
+    <h2>Address Book</h2>
+{% endblock %}
+
+{% block content %}
+    <div class="clearfix">
+      <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}"> Calendar </a>
+    </div>
+    {% include 'calendar/messages.html' %}
+    <div class="container-fluid col-lg-12">
+        <div class="row">
+            <div class="container-fluid col-lg-6" id="left-side">
+                <table class="table-bordered">
+                    <thead>
+                        <tr>
+                            <td>Avatar</td>
+                            <td>Username</td>
+                            <td>First Name</td>
+                            <td>Last Name</td>
+                            <td>Email</td>
+                            <td>Street Address</td>
+                            <td>City</td>
+                            <td>State</td>
+                            <td>Zipcode</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                            <tr>
+                                <td>{{ contact.avatar_url }}</td>
+                                <td>{{ contact.username }}</td>
+                                <td>{{ contact.first_name }}</td>
+                                <td>{{ contact.last_name }}</td>
+                                <td>{{ contact.email }}</td>
+                                <td>{{ contact.address.street_address }}</td>
+                                <td>{{ contact.address.city }}</td>
+                                <td>{{ contact.address.state }}</td>
+                                <td>{{ contact.address.zipcode }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+            <div class="container-fluid col-lg-6 id=right-side">
+                <form action="{% url 'schedule_calendar:address_book' %}" method="post">
+                    {% csrf_token %}
+                    <label for="email">Enter the email of the user you would like to add to your addressbook.</label><br>
+                    {{ form }}
+                    <button type="submit">Look Up User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

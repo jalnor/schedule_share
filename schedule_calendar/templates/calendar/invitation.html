@@ -17,6 +17,9 @@
         <tr><td colspan="2">Description:</td><td colspan="2">{{ description }}</td></tr>
         <tr><td colspan="2">Start Time:</td><td colspan="2">{{ start_time }}</td></tr>
         <tr><td colspan="2">End Time:</td><td colspan="2">{{ end_time }}</td></tr>
+        <tr><td colspan="2">Address:</td></tr>
+        <a href=""><tr><td colspan="2">{{ street_address }}</td></tr>
+        <tr><td colspan="2">{{ city }}, {{ state }} {{ zipcode }}</td></tr></a>
         <tr>
             {% autoescape off %}
             <td colspan="2"><a href="http://{{ domain }}{% url 'schedule_calendar:invite_result' uidb64=uid token=token participant=participant_id result='accepted' %}">Accept</a></td>
