@@ -12,10 +12,14 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 from django.contrib import staticfiles
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
 
+load_dotenv()
+
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -24,6 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-t+whqd)@zmg6h3qyxou1xs#^$aon$#n+06f1&bgv-+$n=9f8)v'
+DEFAULT_HASHING_ALGORITHM = 'sha256'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -130,7 +135,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/calendar'
 LOGOUT_REDIRECT_URL = '/accounts/login'
 
-#Message tags for toast messages
-MESSAGE_TAGS = {
-    messages.ERROR: 'danger'
-}
+# Email settings
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_HOST = 'localhost'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = ''
+
+EMAIL_PORT = 8000
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = os.environ['email_user']
+EMAIL_HOST_PASSWORD = os.environ['email_password']
+

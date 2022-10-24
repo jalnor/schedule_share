@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Invitation</title>
+</head>
+<body>
+    <p>Hi, {{ user }},
+
+    I have an event I would like you to attend. Below are the details.
+
+    Thanks,
+    {{ sender }}</p>
+    <table class="form form-table">
+        <!-- TODO add in address fields and eventually maps accessibility  -->
+        <tr><td colspan="2">Event:</td>td<td colspan="2">{{ event_name }}</td></tr>
+        <tr><td colspan="2">Description:</td><td colspan="2">{{ description }}</td></tr>
+        <tr><td colspan="2">Start Time:</td><td colspan="2">{{ start_time }}</td></tr>
+        <tr><td colspan="2">End Time:</td><td colspan="2">{{ end_time }}</td></tr>
+        <tr>
+            {% autoescape off %}
+            <td colspan="2"><a href="http://{{ domain }}{% url 'schedule_calendar:invite_result' uidb64=uid token=token participant=participant_id result='accepted' %}">Accept</a></td>
+            <td colspan="2"><a href="http://{{ domain }}{% url 'schedule_calendar:invite_result' uidb64=uid token=token participant=participant_id result='declined' %}">Decline</a></td>
+            {% endautoescape %}
+        </tr>
+    </table>
+
+</body>
+</html>

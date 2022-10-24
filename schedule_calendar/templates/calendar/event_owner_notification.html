@@ -1,0 +1,12 @@
+{% extends 'calendar/base.html' %}
+{% block title %}
+    <h2>Invitation Response</h2>
+{% endblock %}
+{% block content %}
+    Hi {{ user }},
+
+    Your invitation to {{ sender }} for event {{ event_name }} has been {{ status }}.
+    {% if status == 'Declined' %}
+        Please login to select another participant if need be.
+    {% endif %}
+{% endblock %}

@@ -92,3 +92,7 @@ a {
   /*scale: 75% !important;*/
 }
 
+.alert-error {
+  background-color: red;
+}
+

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from calendar import HTMLCalendar
 
 from django.contrib.auth.models import User
-from .models import Event
+from .models import Event, Profile
 
 
 class Calendar(HTMLCalendar):
@@ -10,38 +10,41 @@ class Calendar(HTMLCalendar):
 		self.year = year
 		self.month = month
 		self.user = user
+		# self.profile = Profile.objects.get(user_id=self.user.id)
 		super(Calendar, self).__init__()
 
 	# formats a day as a td
 	# filter events by day and owner
 	def formatday(self, day, events):
+		# print('User in calendar: ', self.user)
+
 		events_per_day = events.filter(start_time__day=day, owner=self.user)
-		other_events = events.filter(start_time__day=day, participants__user_email=self.user.email)
-		print('Other events: ', other_events, ' ', self.user.email)
-		d = ''
+		# other_events = events.filter(start_time__day=day, participants__participant_email=self.user.email)
+		# print('Other events: ', other_events, ' ', self.user.email)
+		date = ''
 		for event in events_per_day:
-			d += f'<li><a href="event/edit/{event.id}"> {event.title} </a></li>'
-		for event in other_events:
-			d += f'<li><a href="event/edit/{event.id}"> {event.title} </a></li>'
+			date += f'<li><a href="event/edit/{event.id}"> {event.event_name} </a></li>'
+		# for event in other_events:
+		# 	date += f'<li><a href="event/edit/{event.id}"> {event.event_name} </a></li>'
 		if day != 0:
-			return f"<td><span class='date'>{day}</span><ul> {d} </ul></td>"
+			return f"<td><span class='date'>{day}</span><ul> {date} </ul></td>"
 		return '<td></td>'
 
 	# formats a week as a tr
-	def formatweek(self, theweek, events):
+	def formatweek(self, the_week, events):
 		week = ''
-		for d, weekday in theweek:
-			week += self.formatday(d, events)
+		for day, weekday in the_week:
+			week += self.formatday(day, events)
 		return f'<tr> {week} </tr>'
 
 	# formats a month as a table
 	# filter events by year and month
-	def formatmonth(self, withyear=True):
+	def formatmonth(self, with_year=True):
 		events = Event.objects.filter(start_time__year=self.year, start_time__month=self.month)
 
-		cal = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
-		cal += f'{self.formatmonthname(self.year, self.month, withyear=withyear)}\n'
-		cal += f'{self.formatweekheader()}\n'
+		calendar = f'<table border="0" cellpadding="0" cellspacing="0" class="calendar">\n'
+		calendar += f'{self.formatmonthname(self.year, self.month, withyear=with_year)}\n'
+		calendar += f'{self.formatweekheader()}\n'
 		for week in self.monthdays2calendar(self.year, self.month):
-			cal += f'{self.formatweek(week, events)}\n'
-		return cal
+			calendar += f'{self.formatweek(week, events)}\n'
+		return calendar
