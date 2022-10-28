@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
@@ -19,7 +20,8 @@ from django.utils.safestring import mark_safe
 from dotenv import load_dotenv
 
 from .email_handling import EmailHandler
-from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, AddToAddressBook
+from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists, \
+    DisplayUserData, AddToAddressBook
 from .models import *
 from .utils import Calendar
 
@@ -69,6 +71,7 @@ def get_date(req_day):
     return datetime.today()
 
 
+@login_required(login_url='')
 def event(request, event_id=None):
     participants = Participant.objects.get_queryset()
 
@@ -117,6 +120,7 @@ def event(request, event_id=None):
     })
 
 
+@login_required(login_url='')
 def invite(request):
 
     participant_instance = Participant()
@@ -174,7 +178,7 @@ def signup(request, error=None):
             address = address_form.save()
 
             user = user_form.save(commit=False)
-            if user == get_user(user.email):
+            if get_user(user.email):
                 return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
             user.is_active = False
             user.save()
@@ -211,6 +215,7 @@ def signup(request, error=None):
         })
 
 
+@login_required(login_url='')
 def profile(request):
 
     profile_instance = Profile.objects.get(user_id=request.user.id)
@@ -240,10 +245,12 @@ def profile(request):
         })
 
 
+@login_required(login_url='')
 def event_delete(request, event_id=None):
     print('Removing event...')
 
 
+@login_required(login_url='')
 def remove_participant(request):
     print('Removing participant...')
 
@@ -252,6 +259,7 @@ def verifying(request):
     return render(request, 'registration/verifying.html')
 
 
+# @login_required(login_url='')
 def get_user(email):
     try:
         return User.objects.get(email=email.lower())
@@ -259,19 +267,28 @@ def get_user(email):
         return None
 
 
-def address_book(request):
-    form = AddToAddressBook()
+@login_required(login_url='')
+def address_book(request, check_user=False):
+    form = CheckIfUserExists(request.POST)
     if request.method == 'POST':
 
-        profile = Profile.objects.get(pk=request.user.id)
-        user = get_user(request.POST['email'])
-        if request.user.id == user.id:
-            return redirect('schedule_calendar:calendar')
+        if check_user:
+            email = form['email'].value()
+            print('Form: ', email)
+            user = get_user(email)
+            if user:
+                print('User exists!')
 
-        addressbook = AddressBook()
-        addressbook.profile = profile
-        addressbook.contacts = user
-        addressbook.save()
+                return render(request, 'calendar/address_book.html', {
+                    'user_exists': True
+                })
+
+        profile = Profile.objects.get(pk=request.user.id)
+
+        # addressbook = AddressBook()
+        # addressbook.profile = profile
+        # addressbook.contacts = user
+        # addressbook.save()
 
         return redirect('schedule_calendar:address_book')
     return render(request, 'calendar/address_book.html', {

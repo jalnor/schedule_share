@@ -45,12 +45,28 @@
                 </table>
             </div>
             <div class="container-fluid col-lg-6 id=right-side">
-                <form action="{% url 'schedule_calendar:address_book' %}" method="post">
+                <form action="{% url 'schedule_calendar:address_book' check_user=True %}" method="post">
                     {% csrf_token %}
                     <label for="email">Enter the email of the user you would like to add to your addressbook.</label><br>
                     {{ form }}
                     <button type="submit">Look Up User</button>
                 </form>
+
+                {% if user_exists %}
+                    <form action="{% url 'schedule_calendar:address_book' check_user=False %}" method="post">
+                        {% csrf_token %}
+                        <label for="email">User exists would you like to add them to your addressbook?</label><br>
+                        <button type="submit">Add User</button>
+                    </form>
+                {% elif user_not_exists %}
+                    <form action="{% url 'schedule_calendar:address_book' check_user=True %}" method="post" >
+                        {% csrf_token %}
+                        <label for="email">Enter the email of the user you would like to add to your addressbook.</label><br>
+                        {{ form }}
+                        <button type="submit">Look Up User</button>
+                    </form>
+                {% endif %}
+
             </div>
         </div>
     </div>

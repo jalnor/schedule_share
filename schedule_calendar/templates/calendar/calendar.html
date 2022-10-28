@@ -13,7 +13,7 @@
             <a class="dropdown-item" href="{% url 'schedule_calendar:invite' %}">Invite Participant</a>
             <a class="dropdown-item" href="{% url 'schedule_calendar:remove_participant' %}">Remove Participant</a>
             <a class="dropdown-item" href="{% url 'schedule_calendar:profile' %}?{{ profile }}">Update Profile</a>
-            <a class="dropdown-item" href="{% url 'schedule_calendar:address_book' %}">Address Book</a>
+            <a class="dropdown-item" href="{% url 'schedule_calendar:address_book' check_user=False %}">Address Book</a>
         </div>
 
     </div>
