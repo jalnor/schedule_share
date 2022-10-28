@@ -6,6 +6,7 @@ from datetime import datetime, date, timedelta
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
@@ -21,8 +22,8 @@ from dotenv import load_dotenv
 
 from .email_handling import EmailHandler
 from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists, \
-    DisplayUserData, AddToAddressBook
-from .models import *
+    AddToAddressBook
+from .models import Event, Address, Participant, Profile
 from .utils import Calendar
 
 load_dotenv()
