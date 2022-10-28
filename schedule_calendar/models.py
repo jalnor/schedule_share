@@ -17,6 +17,11 @@ class Profile(models.Model):
     avatar_url = models.URLField(blank=True)
 
 
+class AddressBook(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
+    contacts = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
+
+
 class Event(models.Model):
     event_name = models.CharField(max_length=200)
     description = models.TextField()
@@ -49,7 +54,3 @@ class Participant(models.Model):
 
     def __str__(self):
         return self.participant.email
-
-
-
-

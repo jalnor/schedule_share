@@ -96,3 +96,17 @@ a {
   background-color: red;
 }
 
+#left-side {
+  clear: both;
+  float: left;
+  width: 50%;
+  height: available;
+}
+
+#right-side {
+  /*clear: right;*/
+  float: right;
+  width: 50%;
+  height: available;
+}
+
