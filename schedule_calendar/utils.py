@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
 from calendar import HTMLCalendar
 
-from django.contrib.auth.models import User
-from .models import Event, Profile
+from .models import Event, Participant
 
 
 class Calendar(HTMLCalendar):
@@ -17,14 +15,21 @@ class Calendar(HTMLCalendar):
 	# filter events by day and owner
 	def formatday(self, day, events):
 		# print('User in calendar: ', self.user)
+		participants = Participant()
+		try:
+			participants = Participant.participants.through.objects.all()
 
+			print('Other events: ', participants)
+		except Participant.DoesNotExist:
+			print('Not Participating!!!!')
 		events_per_day = events.filter(start_time__day=day, owner=self.user)
-		# other_events = events.filter(start_time__day=day, participants__participant_email=self.user.email)
-		# print('Other events: ', other_events, ' ', self.user.email)
+		# other_events = participant.event
+		# # other_events = participant.filter(start_time__day=day)
+		# print('Other events: ', other_events.values())
 		date = ''
 		for event in events_per_day:
 			date += f'<li><a href="event/edit/{event.id}"> {event.event_name} </a></li>'
-		# for event in other_events:
+		# for event in participant:
 		# 	date += f'<li><a href="event/edit/{event.id}"> {event.event_name} </a></li>'
 		if day != 0:
 			return f"<td><span class='date'>{day}</span><ul> {date} </ul></td>"

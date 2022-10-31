@@ -1,8 +1,8 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django import forms
-from django.forms import ModelForm, DateInput, forms, EmailField, Field
-from schedule_calendar.models import Event, Profile, Participant, Address, AddressBook
+from django.forms import ModelForm, DateInput, forms, EmailField
+
+from schedule_calendar.models import Event, Profile, Participant, Address  # , AddressBook
 
 
 class UserForm(UserCreationForm):
@@ -43,17 +43,17 @@ class EventForm(ModelForm):
 class InviteParticipantForm(ModelForm):
     class Meta:
         model = Participant
-        fields = ('participant', 'event')
+        fields = ('participants', 'event')
 
 
 class CheckIfUserExists(forms.Form):
     email = EmailField(required=True)
 
 
-class AddToAddressBook(ModelForm):
-
-    class Meta:
-        model = AddressBook
-        fields = '__all__'
+# class AddToAddressBook(ModelForm):
+#
+#     class Meta:
+#         model = AddressBook
+#         fields = '__all__'
 
 

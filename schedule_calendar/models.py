@@ -18,8 +18,8 @@ class Profile(models.Model):
 
 
 class AddressBook(models.Model):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, related_name='owner')
-    contacts = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='contacts')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='owner')
+    contacts = models.ManyToManyField(User, blank=True, related_name='contacts')
 
 
 class Event(models.Model):
@@ -42,15 +42,11 @@ class Event(models.Model):
 
 
 class Participant(models.Model):
-
     class Status(models.TextChoices):
         INVITED = 'Invited'
         ACCEPTED = 'Accepted'
         DECLINED = 'Declined'
-
-    participant = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True)
+    participants = models.ManyToManyField(User, blank=True)
+    event = models.ManyToManyField(Event, blank=True)
     status = models.CharField(max_length=8, choices=Status.choices, default=None)
 
-    def __str__(self):
-        return self.participant.email

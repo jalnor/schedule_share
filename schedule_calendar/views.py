@@ -1,29 +1,22 @@
 import calendar
 import os
-import socket
 from datetime import datetime, date, timedelta
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponseRedirect, HttpResponse
-from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views import generic
+from django.utils.http import urlsafe_base64_encode
 from django.utils.safestring import mark_safe
+from django.views import generic
 from dotenv import load_dotenv
 
 from .email_handling import EmailHandler
-from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists, \
-    AddToAddressBook
-from .models import Event, Address, Participant, Profile
+from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists
+from .models import Event, Address, Participant, Profile, AddressBook  # , AddressBook
 from .utils import Calendar
 
 load_dotenv()
@@ -123,7 +116,6 @@ def event(request, event_id=None):
 
 @login_required(login_url='')
 def invite(request):
-
     participant_instance = Participant()
 
     form = InviteParticipantForm(request.POST or None, instance=participant_instance)
@@ -131,13 +123,23 @@ def invite(request):
         """ For future use """
         # account_sid = os.environ['ACCOUNT']
         # token = os.environ['TOKEN']
-
         current_event = Event.objects.get(id=request.POST['event'])
-        participant = form.save(commit=False)
-        participant.status = participant.Status.INVITED
-        participant.save()
+        print('Username: ', request.POST['participants'])
+        user = User.objects.get(id=request.POST['participants'])
+        if current_event.owner_id == request.user.id:
+            participant = form.save(commit=False)
+            participant.status = participant.Status.INVITED
+            participant.save()
+            participant.event.add(current_event.id)
+            print('Event: ', current_event, ' Participants: ', participant.participants.values())
 
-        user = User.objects.get(email=participant_instance)
+            participant.participants.add(user)
+        else:
+            message = ['You do not own this event!']
+            return render(request, 'calendar/invite_participant.html', {
+                'form': form,
+                'messages': message
+            })
 
         invite_email = EmailHandler(
             current_user=request.user,
@@ -169,7 +171,7 @@ def invite_response(request):
 def signup(request, error=None):
     if error:
         messages.error(request, error)
-    address_form = AddressForm(request.POST or None,)
+    address_form = AddressForm(request.POST or None, )
     user_form = UserForm(request.POST)
     profile_form = ProfileForm(request.POST)
 
@@ -218,7 +220,6 @@ def signup(request, error=None):
 
 @login_required(login_url='')
 def profile(request):
-
     profile_instance = Profile.objects.get(user_id=request.user.id)
 
     if profile_instance:
@@ -269,7 +270,20 @@ def get_user(email):
 
 
 @login_required(login_url='')
-def address_book(request, check_user=False):
+def address_book(request, check_user=None):
+    address_book_owner = User.objects.get(id=request.user.id)
+    contacts = []
+    try:
+        addressbook = AddressBook.objects.get(owner_id=address_book_owner.id)
+        [print(contact) for contact in addressbook.contacts.values()]
+
+    except AddressBook.DoesNotExist:
+        print("Don't have one yet!")
+        addressbook = AddressBook()
+    if addressbook.owner_id == address_book_owner.id:
+        contacts = addressbook.contacts.values()
+    print('Profile owner: ', address_book_owner, ' check_user: ', check_user )
+
     form = CheckIfUserExists(request.POST)
     if request.method == 'POST':
 
@@ -277,23 +291,28 @@ def address_book(request, check_user=False):
             email = form['email'].value()
             print('Form: ', email)
             user = get_user(email)
+            # TODO Fix this section to check if address book is new
             if user:
-                print('User exists!')
+                if not addressbook.owner_id == address_book_owner.id:
+                    addressbook.owner_id = address_book_owner.id
+                    addressbook.save()
 
+                addressbook.contacts.add(user.id)
+                contacts = addressbook.contacts.values()
+                print('AddressBook: ', addressbook, ' contacts: ', contacts)
                 return render(request, 'calendar/address_book.html', {
-                    'user_exists': True
+                    'form': form,
+                    'contacts': contacts,
+                    'check_user': False,
                 })
-
-        profile = Profile.objects.get(pk=request.user.id)
-
-        # addressbook = AddressBook()
-        # addressbook.profile = profile
-        # addressbook.contacts = user
-        # addressbook.save()
+            else:
+                message = 'The email you entered is not in our system.'
+                redirect(request, 'calendar/address_book.html', {'message': message})
 
         return redirect('schedule_calendar:address_book')
     return render(request, 'calendar/address_book.html', {
-        'form': form
+        'form': form,
+        'contacts': contacts
     })
 
 
