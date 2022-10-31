@@ -8,7 +8,7 @@ Add Participant
 <div class="clearfix">
   <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}"> Calendar </a>
 </div>
-
+{% include 'calendar/messages.html' %}
 <form method="post">
   {% csrf_token %}
   <table class="form form-table">
