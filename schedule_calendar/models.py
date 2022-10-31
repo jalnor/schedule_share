@@ -18,8 +18,8 @@ class Profile(models.Model):
 
 
 class AddressBook(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
-    contacts = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, related_name='owner')
+    contacts = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='contacts')
 
 
 class Event(models.Model):

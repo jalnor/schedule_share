@@ -13,7 +13,8 @@ urlpatterns = [
     path('profile/edit/', views.profile, name='profile'),
     path('logout/', views.index),
 
-    path('address_book/', views.address_book, name='address_book'),
+    path('check_if_user_exists/<check_user>', views.address_book, name='check_if_user'),
+    path('address_book/<check_user>', views.address_book, name='address_book'),
 
     path('calendar/', views.CalendarView.as_view(), name='calendar'),
 
