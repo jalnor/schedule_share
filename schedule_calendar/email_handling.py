@@ -80,10 +80,11 @@ class EmailHandler:
 def notify_event_owner(participant: int):
     print('Participant ', participant)
     current_participant = Participant.objects.get(pk=participant)
-    current_event = Event.objects.get(pk=current_participant.event_id)
-    respondent = User.objects.get(pk=current_participant.participant_id)
-    print('Respondent: ', respondent.get_full_name(), ' current_participant: ', current_participant.participant_id)
-    event_owner = User.objects.get(pk=current_event.owner.id)
+    current_event = Event.objects.get(pk=current_participant.event.id)
+    respondent = User.objects.get(pk=current_participant.participants.id)
+    print('Respondent: ', respondent, ' current_participant: ', current_participant.status)
+    print('Current Event: ', current_event)
+    event_owner = User.objects.get(pk=current_event.owner_id)
     current_respondent = respondent.get_full_name()
     invite_email = EmailHandler(
         current_user=respondent,

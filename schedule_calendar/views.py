@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 from .email_handling import EmailHandler
 from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists
-from .models import Event, Address, Participant, Profile, AddressBook  # , AddressBook
+from .models import Event, Address, Participant, Profile
 from .utils import Calendar
 
 load_dotenv()
@@ -67,10 +67,20 @@ def get_date(req_day):
 
 @login_required(login_url='')
 def event(request, event_id=None):
-    participants = Participant.objects.get_queryset()
+    attendees = []
+    events = Event.objects.filter(owner_id=request.user.id).values()
+    participants = Participant.objects.filter(event_id=event_id).filter(status='Accepted').values()
+    attendees_ids = [participant['participants_id'] for participant in participants]
+    for attendee_id in attendees_ids:
+        attendees.append(User.objects.filter(pk=attendee_id).values()[0])
+    print('Events: ', events, '\nParticipants: ', participants, '\nAttendees: ', attendees)
+
+    participant_data = zip(participants, attendees)
 
     if event_id:
         instance = get_object_or_404(Event, pk=event_id)
+        if instance.owner.id == request.user.id:
+            instance.owner = request.user
         if instance.event_address:
             address_instance = Address.objects.get(id=instance.event_address.id)
         else:
@@ -110,13 +120,19 @@ def event(request, event_id=None):
 
     return render(request, 'calendar/event.html', {
         'form': form,
+        'events': events,
         'address_form': address_form,
+        'participant_data': participant_data,
     })
 
 
 @login_required(login_url='')
-def invite(request):
-    participant_instance = Participant()
+def invite(request, participant_id=None):
+
+    if participant_id:
+        participant_instance = get_object_or_404(Participant, pk=participant_id)
+    else:
+        participant_instance = Participant()
 
     form = InviteParticipantForm(request.POST or None, instance=participant_instance)
     if request.POST and form.is_valid():
@@ -128,12 +144,12 @@ def invite(request):
         user = User.objects.get(id=request.POST['participants'])
         if current_event.owner_id == request.user.id:
             participant = form.save(commit=False)
+            participant.event = current_event
+            participant.participants = user
             participant.status = participant.Status.INVITED
             participant.save()
-            participant.event.add(current_event.id)
-            print('Event: ', current_event, ' Participants: ', participant.participants.values())
+            print('Event: ', current_event, ' Participants: ', participant.participants)
 
-            participant.participants.add(user)
         else:
             message = ['You do not own this event!']
             return render(request, 'calendar/invite_participant.html', {
@@ -272,17 +288,20 @@ def get_user(email):
 @login_required(login_url='')
 def address_book(request, check_user=None):
     address_book_owner = User.objects.get(id=request.user.id)
-    contacts = []
-    try:
-        addressbook = AddressBook.objects.get(owner_id=address_book_owner.id)
-        [print(contact) for contact in addressbook.contacts.values()]
+    # address_book_owner_profile = Profile.objects.get(user_id=address_book_owner.id)
+    profiles = []
+    addresses = []
+    contacts = address_book_owner.profile.contacts.values()
 
-    except AddressBook.DoesNotExist:
-        print("Don't have one yet!")
-        addressbook = AddressBook()
-    if addressbook.owner_id == address_book_owner.id:
-        contacts = addressbook.contacts.values()
-    print('Profile owner: ', address_book_owner, ' check_user: ', check_user )
+    for contact in contacts:
+        current_id = contact['id']
+        print(contact)
+        print(Profile.objects.filter(user_id=current_id).values()[0])
+        current_profile = Profile.objects.filter(user_id=current_id).values()[0]
+        profiles.append(current_profile)
+        addresses.append(Address.objects.filter(pk=current_profile['id']).values()[0])
+
+    addressbook = zip(contacts, profiles, addresses)
 
     form = CheckIfUserExists(request.POST)
     if request.method == 'POST':
@@ -291,18 +310,15 @@ def address_book(request, check_user=None):
             email = form['email'].value()
             print('Form: ', email)
             user = get_user(email)
-            # TODO Fix this section to check if address book is new
+            # TODO Fix this section to email prospective participant and
+            # update their status
             if user:
-                if not addressbook.owner_id == address_book_owner.id:
-                    addressbook.owner_id = address_book_owner.id
-                    addressbook.save()
+                address_book_owner.profile.contacts.add(user)
 
-                addressbook.contacts.add(user.id)
-                contacts = addressbook.contacts.values()
-                print('AddressBook: ', addressbook, ' contacts: ', contacts)
+                print('Contacts: ', contacts)
                 return render(request, 'calendar/address_book.html', {
                     'form': form,
-                    'contacts': contacts,
+                    'contacts': addressbook,
                     'check_user': False,
                 })
             else:
@@ -312,7 +328,7 @@ def address_book(request, check_user=None):
         return redirect('schedule_calendar:address_book')
     return render(request, 'calendar/address_book.html', {
         'form': form,
-        'contacts': contacts
+        'contacts': addressbook,
     })
 
 

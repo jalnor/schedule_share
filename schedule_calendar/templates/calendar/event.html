@@ -9,12 +9,42 @@ Event
   <a class="btn btn-info left" href="{% url 'schedule_calendar:calendar' %}"> Calendar </a>
 </div>
 {% include 'calendar/messages.html' %}
-<form method="post">
-  {% csrf_token %}
-  <table class="form form-table">
-      {{ form }}
-      {{ address_form }}
-    <tr><td colspan="2"><button type="submit" name='submit' class="btn btn-info right"> Submit </button></td></tr>
-  </table>
-</form>
+    <div class="container-fluid col-lg-8" id="another-left-side">
+        <table class="table-responsive table-bordered">
+            <thead><td>Event Name</td><td>Start Date</td></thead>
+            {% for event in events %}
+                <tr>
+                    <td>{{ event.event_name }}</td>
+                    <td>{{ event.start_time }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="container-fluid col-lg-8" id="middle">
+        <form method="post">
+          {% csrf_token %}
+          <table class="form form-table">
+              {{ form }}
+              {{ address_form }}
+            <tr><td colspan="2"><button type="submit" name='submit' class="btn btn-info right"> Submit </button></td></tr>
+          </table>
+        </form>
+    </div>
+    <div class="container-fluid col-lg-8" id="another-right-side">
+        <table class="table-responsive table-bordered">
+            <thead><td>Participant Name</td><td>Status</td></thead>
+            {% for participant, attendee in participant_data %}
+                <tr>
+                    <td>{{ attendee.first_name }} {{ attendee.last_name }}</td>
+                    <td>{{ participant.status }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <form method="post">
+            {% csrf_token %}
+            <tr><td colspan="2"><button type="submit" name='submit' class="btn btn-info right"> Submit </button></td></tr>
+        </form>
+    </div>
+
+
 {% endblock %}
