@@ -14,6 +14,7 @@ from django.utils.safestring import mark_safe
 from django.views import generic
 from dotenv import load_dotenv
 
+from schedule_share.settings import DEFAULT_FROM_EMAIL
 from .email_handling import EmailHandler
 from .forms import EventForm, UserForm, ProfileForm, InviteParticipantForm, AddressForm, CheckIfUserExists
 from .models import Event, Address, Participant, Profile
@@ -208,7 +209,7 @@ def signup(request):
             confirmation_email = EmailHandler(
                 current_user=user,
                 template='calendar/email.html',
-                from_email=os.environ['email_address'],
+                from_email=DEFAULT_FROM_EMAIL,
                 recipient=user,
                 to_email=user.email,
                 subject='Email Verification',

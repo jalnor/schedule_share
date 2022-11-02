@@ -12,6 +12,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from schedule_calendar.models import Participant, Event
+from schedule_share.settings import DEFAULT_FROM_EMAIL
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -39,7 +40,6 @@ class EmailHandler:
         self.current_site = current_site
         self.current_event = current_event
         self.participant = participant
-
 
     def send(self):
         try:
@@ -78,18 +78,18 @@ class EmailHandler:
 
 
 def notify_event_owner(participant: int):
-    print('Participant ', participant)
+    # print('Participant ', participant)
     current_participant = Participant.objects.get(pk=participant)
     current_event = Event.objects.get(pk=current_participant.event.id)
     respondent = User.objects.get(pk=current_participant.participants.id)
-    print('Respondent: ', respondent, ' current_participant: ', current_participant.status)
-    print('Current Event: ', current_event)
+    # print('Respondent: ', respondent, ' current_participant: ', current_participant.status)
+    # print('Current Event: ', current_event)
     event_owner = User.objects.get(pk=current_event.owner_id)
     current_respondent = respondent.get_full_name()
     invite_email = EmailHandler(
         current_user=respondent,
         template='calendar/event_owner_notification.html',
-        from_email=os.environ['email_address'],
+        from_email=DEFAULT_FROM_EMAIL,
         recipient=event_owner,
         to_email=event_owner.email,
         subject='Invitation response',
