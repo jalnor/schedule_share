@@ -128,7 +128,6 @@ def event(request, event_id=None):
 
 @login_required(login_url='')
 def invite(request, participant_id=None):
-
     if participant_id:
         participant_instance = get_object_or_404(Participant, pk=participant_id)
     else:
@@ -184,31 +183,29 @@ def invite_response(request):
 
 
 @transaction.atomic
-def signup(request, error=None):
-    if error:
-        messages.error(request, error)
-    address_form = AddressForm(request.POST or None, )
-    user_form = UserForm(request.POST)
-    profile_form = ProfileForm(request.POST)
+def signup(request):
+    address_form = AddressForm(request.POST or None)
+    user_form = UserForm(request.POST or None)
+    profile_form = ProfileForm(request.POST or None)
 
     if request.method == 'POST':
-        if user_form.is_valid():
 
-            address = address_form.save()
+        email = user_form['email'].value()
+        if user_form.is_valid() and not get_user(email):
 
+            address = address_form.save(commit=False)
             user = user_form.save(commit=False)
-            if get_user(user.email):
-                return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
             user.is_active = False
             user.save()
-            print('Url safe id: ', urlsafe_base64_encode(force_bytes(user.pk)))
+
+            address.save()
 
             new_profile = profile_form.save(commit=False)
             new_profile.user_id = user.id
             new_profile.address_id = address.id
             new_profile.save()
 
-            invite_email = EmailHandler(
+            confirmation_email = EmailHandler(
                 current_user=user,
                 template='calendar/email.html',
                 from_email=os.environ['email_address'],
@@ -217,7 +214,7 @@ def signup(request, error=None):
                 subject='Email Verification',
                 current_site=get_current_site(request)
             )
-            sent = invite_email.send()
+            sent = confirmation_email.send()
 
             if sent == 1001:
                 messages.error('An error has occurred, please try again!')
@@ -225,7 +222,20 @@ def signup(request, error=None):
 
             return redirect('schedule_calendar:verifying')
         else:
-            return redirect('schedule_calendar:signup_retry', error=[user_form.errors])
+
+            if not user_form.is_valid():
+                message = 'Username already exists'
+            elif email:
+                message = 'User email already exists'
+
+            user_form = UserForm()
+            # =gJZxtbrTQ)C4]FM
+            return render(request, "registration/signup.html", {
+                'address_form': address_form,
+                'user_form': user_form,
+                'profile_form': profile_form,
+                'messages': [message],
+            })
     else:
         return render(request, "registration/signup.html", {
             'address_form': address_form,
@@ -287,16 +297,14 @@ def get_user(email):
 
 @login_required(login_url='')
 def address_book(request, check_user=None):
+
     address_book_owner = User.objects.get(id=request.user.id)
-    # address_book_owner_profile = Profile.objects.get(user_id=address_book_owner.id)
     profiles = []
     addresses = []
     contacts = address_book_owner.profile.contacts.values()
 
     for contact in contacts:
         current_id = contact['id']
-        print(contact)
-        print(Profile.objects.filter(user_id=current_id).values()[0])
         current_profile = Profile.objects.filter(user_id=current_id).values()[0]
         profiles.append(current_profile)
         addresses.append(Address.objects.filter(pk=current_profile['id']).values()[0])
@@ -304,26 +312,36 @@ def address_book(request, check_user=None):
     addressbook = zip(contacts, profiles, addresses)
 
     form = CheckIfUserExists(request.POST)
-    if request.method == 'POST':
+    if request.method == 'POST' and form.is_valid():
 
         if check_user:
             email = form['email'].value()
-            print('Form: ', email)
             user = get_user(email)
-            # TODO Fix this section to email prospective participant and
-            # update their status
-            if user:
-                address_book_owner.profile.contacts.add(user)
+            user_exists = [contact for contact in contacts if contact['email'] == email]
+            print('Contacts: ', contacts)
+            print('Checking if in contacts: ',  [contact for contact in contacts if contact['email'] == email])
+            if email != request.user.email and user and not user_exists:
+                # address_book_owner.profile.contacts.add(user)
 
-                print('Contacts: ', contacts)
                 return render(request, 'calendar/address_book.html', {
                     'form': form,
                     'contacts': addressbook,
                     'check_user': False,
                 })
             else:
-                message = 'The email you entered is not in our system.'
-                redirect(request, 'calendar/address_book.html', {'message': message})
+                if email == request.user.email:
+                    message = "Cannot add yourself!"
+                elif user_exists:
+                    message = 'User already added!'
+                else:
+                    message = 'The email you entered is not in our system.'
+                form = CheckIfUserExists()
+                return render(request, 'calendar/address_book.html', {
+                    'form': form,
+                    'contacts': addressbook,
+                    'check_user': False,
+                    'messages': [message],
+                })
 
         return redirect('schedule_calendar:address_book')
     return render(request, 'calendar/address_book.html', {
