@@ -9,7 +9,6 @@ urlpatterns = [
     path('verifying/', views.verifying, name='verifying'),
     path('activate/<uidb64>/<token>', email_handling.activate, name='activate'),
     path('signup/', views.signup, name='signup'),
-    path('signup/<error>', views.signup, name='signup_retry'),
     path('profile/edit/', views.profile, name='profile'),
     path('logout/', views.index),
 

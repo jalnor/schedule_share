@@ -148,4 +148,4 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ['email_user']
 EMAIL_HOST_PASSWORD = os.environ['email_password']
-
+DEFAULT_FROM_EMAIL = os.environ['email_address']

@@ -103,10 +103,37 @@ a {
   height: available;
 }
 
+#middle {
+  float: left;
+  width: 33%;
+  /*border: 2px solid black;*/
+}
+
 #right-side {
   /*clear: right;*/
   float: right;
   width: 50%;
   height: available;
+  /*border: 12px solid black;*/
+}
+
+#another-right-side {
+  /*clear: right;*/
+  float: right;
+  width: 33%;
+  height: available;
+  /*border: 2px solid black;*/
+}
+
+#another-left-side {
+  clear: both;
+  /*border: 2px dotted black;*/
+  float: left;
+  width: 33%;
+  height: available;
+}
+
+.table-responsive {
+  width: 700px;
 }
 

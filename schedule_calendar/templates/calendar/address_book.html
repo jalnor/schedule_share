@@ -12,7 +12,7 @@
     <div class="container-fluid col-lg-12">
         <div class="row">
             <div class="container-fluid col-lg-6" id="left-side">
-                <table class="table-bordered">
+                <table class="table-responsive table-bordered">
                     <thead>
                         <tr>
                             <td>Avatar</td>
@@ -27,17 +27,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for contact in contacts %}
+                        {% for contact, profile, address in contacts %}
                             <tr>
-                                <td>{{ contact.avatar_url }}</td>
+                                <td><img src="{{ profile.avatar_url }}"/></td>
                                 <td>{{ contact.username }}</td>
                                 <td>{{ contact.first_name }}</td>
                                 <td>{{ contact.last_name }}</td>
                                 <td>{{ contact.email }}</td>
-                                <td>{{ contact.address.street_address }}</td>
-                                <td>{{ contact.address.city }}</td>
-                                <td>{{ contact.address.state }}</td>
-                                <td>{{ contact.address.zipcode }}</td>
+                                <td>{{ address.street_address }}</td>
+                                <td>{{ address.city }}</td>
+                                <td>{{ address.state }}</td>
+                                <td>{{ address.zipcode }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
