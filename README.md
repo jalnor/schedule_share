@@ -10,10 +10,7 @@ signing up for that service, to invite them to participate.
 ## Setup
 
 In order to run this app you will need to have Python installed with a virtual 
-environment created and activated. If not sure how, you can find out [here]().
-
-
-
-
+environment created and activated. If not sure how, you can find out 
+[here](Python_Related/PYTHONINSTALL.md).
 
 
