@@ -5,6 +5,10 @@ ___
 This is an app that allows a a user to create events and invite trusted family and friends to participate in the event. The app will send an email, or text if signing up for that service, to invite them to participate.
 
 
+## Setup
+
+In order to run this app you will need to have Python installed with a virtual 
+environment created and activated. If not sure how, you can find out [here]().
 
 
 
