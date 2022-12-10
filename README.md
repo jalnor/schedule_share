@@ -19,10 +19,15 @@ With the virtual environment activated, type:
 ``` pip install -r requirements.txt ```
 
 into your terminal. Once the dependencies are installed you will need to instruct 
-Django to create the database. Type:
+Django to create the database, type:
 
 ```
 python manage.py makemigrations
 python manage.py migrate
 ```
+Now that the database is created, you can start the app with:
 
+``` python manage.py runserver ```
+
+You should now see the url displayed as hyperlink in terminal. 
+Click to open browser.
