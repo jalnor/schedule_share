@@ -17,3 +17,12 @@ environment created and activated. If not sure how, you can find out
 With the virtual environment activated, type:
 
 ``` pip install -r requirements.txt ```
+
+into your terminal. Once the dependencies are installed you will need to instruct 
+Django to create the database. Type:
+
+```
+python manage.py makemigrations
+python manage.py migrate
+```
+
