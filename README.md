@@ -11,6 +11,4 @@ signing up for that service, to invite them to participate.
 
 In order to run this app you will need to have Python installed with a virtual 
 environment created and activated. If not sure how, you can find out 
-[here](https://jalnor.go thub.com/Python_Related/PYTHONINSTALL.md).
-
-
+[here](https://github.com/jalnor/install_documentation/blob/edd4efbefc403062b11f186d5d7ef8c9c27a2ad7/Python_Related/PYTHONINSTALL.md).
