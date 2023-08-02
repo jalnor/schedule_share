@@ -78,7 +78,6 @@ class EmailHandler:
 
 
 def notify_event_owner(participant: int):
-    # print('Participant ', participant)
     current_participant = Participant.objects.get(pk=participant)
     current_event = Event.objects.get(pk=current_participant.event.id)
     respondent = User.objects.get(pk=current_participant.participants.id)
