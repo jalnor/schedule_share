@@ -1,0 +1,7 @@
+django-twilio~=0.14.0
+Django~=4.2.3
+python-dotenv~=0.21.0
+sqlparse~=0.4.3
+twilio~=7.14.2
+python-dotenv~=0.21.0
+pytest~=7.1.3

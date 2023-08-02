@@ -10,8 +10,7 @@
         <div class="dropdown-menu" aria-labelledby="dropdownMenubutton">
             <a class="dropdown-item" href="{% url 'schedule_calendar:event_new' %}?{{ event }}">Add Event</a>
             <a class="dropdown-item" href="{% url 'schedule_calendar:event_delete' %}?{{ event }}">Remove Event</a>
-            <a class="dropdown-item" href="{% url 'schedule_calendar:invite' %}">Invite Participant</a>
-            <a class="dropdown-item" href="{% url 'schedule_calendar:remove_participant' %}">Remove Participant</a>
+            <a class="dropdown-item" href="{% url 'schedule_calendar:invite' %}">Participants</a>
             <a class="dropdown-item" href="{% url 'schedule_calendar:profile' %}?{{ profile }}">Update Profile</a>
             <a class="dropdown-item" href="{% url 'schedule_calendar:address_book' check_user=False %}">Address Book</a>
         </div>
