@@ -15,10 +15,6 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True)
     address = models.ForeignKey(Address, on_delete=models.CASCADE, blank=True, null=True)
     avatar_url = models.URLField(blank=True)
-
-
-class AddressBook(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='owner')
     contacts = models.ManyToManyField(User, blank=True, related_name='contacts')
 
 
@@ -30,7 +26,7 @@ class Event(models.Model):
     end_time = models.DateTimeField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
 
-    readonly_fields = 'Owner'
+    readonly_fields = 'owner'
 
     def __str__(self):
         return self.event_name
@@ -46,7 +42,7 @@ class Participant(models.Model):
         INVITED = 'Invited'
         ACCEPTED = 'Accepted'
         DECLINED = 'Declined'
-    participants = models.ManyToManyField(User, blank=True)
-    event = models.ManyToManyField(Event, blank=True)
+    participants = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, blank=True)
     status = models.CharField(max_length=8, choices=Status.choices, default=None)
 
